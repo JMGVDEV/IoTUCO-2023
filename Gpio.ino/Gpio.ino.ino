@@ -2,8 +2,8 @@
 #include <WiFiClient.h>
 
 // Replace with your network credentials
-const char* ssid = "IOTUCO";
-const char* password = "LifeIsIoT";
+const char* ssid = "LONDONOG";
+const char* password = "39437320";
 
  
 void setup(void){
