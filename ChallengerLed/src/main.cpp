@@ -11,8 +11,8 @@
 #include <ESPAsyncWebServer.h>
 
 // Replace with your network credentials
-const char* ssid = "MERCUSYS9BDC";
-const char* password = "plaztilina2023";
+const char* ssid = "xxxxxx";
+const char* password = "xxxxxxx";
 
 bool ledState1 = 0;
 const int ledPin1 = 14;
@@ -103,9 +103,15 @@ const char index_html[] PROGMEM = R"rawliteral(
   </div>
   <div class="content">
     <div class="card">
-      <h2>Output - GPIO 2</h2>
-      <p class="state">state: <span id="state">%STATE%</span></p>
-      <p><button id="button" class="button">Toggle</button></p>
+      <h2>Output - GPIO 14</h2>
+      <p class="state">state: <span id="state1">%STATE1%</span></p>
+      <p><button id="button1" class="button">Red</button></p>
+      <h2>Output - GPIO 13</h2>
+      <p class="state">state: <span id="state2">%STATE2%</span></p>
+      <p><button id="button2" class="button">Green</button></p>
+      <h2>Output - GPIO 12</h2>
+      <p class="state">state: <span id="state3">%STATE3%</span></p>
+      <p><button id="button3" class="button">Blue</button></p>
     </div>
   </div>
 <script>
@@ -127,45 +133,70 @@ const char index_html[] PROGMEM = R"rawliteral(
     console.log('Connection closed');
     setTimeout(initWebSocket, 2000);
   }
-  function onMessage(event) {
-    var state;
-    if (event.data == "1"){
-      state = "ON";
-    }
-    else{
-      state = "OFF";
-    }
-    document.getElementById('state').innerHTML = state;
-  }
+ function onMessage(event) {
+  console.log(event.data);
+  var states = event.data.split(""); // Split the message into an array of characters
+  updateState('state1', states[0]);
+  updateState('state2', states[1]);
+  updateState('state3', states[2]);
+}
+
+function updateState(elementId, stateChar) {
+  var state = stateChar === "1" ? "ON" : "OFF";
+  document.getElementById(elementId).innerHTML = state;
+}
+
   function onLoad(event) {
     initWebSocket();
     initButton();
   }
   function initButton() {
-    document.getElementById('button').addEventListener('click', toggle);
+    document.getElementById('button1').addEventListener('click', toggle1);
+    document.getElementById('button2').addEventListener('click', toggle2);
+    document.getElementById('button3').addEventListener('click', toggle3);
   }
-  function toggle(){
-    websocket.send('toggle');
-  }
+  function toggle1() {
+  websocket.send('toggle1');
+}
+
+function toggle2() {
+  websocket.send('toggle2');
+}
+
+function toggle3() {
+  websocket.send('toggle3');
+}
+
 </script>
 </body>
 </html>
 )rawliteral";
 
 void notifyClients() {
-  ws.textAll(String(ledState1));
+  String message = String(ledState1) + String(ledState2) + String(ledState3);
+  ws.textAll(message);
 }
+
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     data[len] = 0;
-    if (strcmp((char*)data, "toggle") == 0) {
+    if (strcmp((char*)data, "toggle1") == 0) {
       ledState1 = !ledState1;
+      notifyClients();
+    }
+    if (strcmp((char*)data, "toggle2") == 0) {
+      ledState2 = !ledState2;
+      notifyClients();
+    }
+    if (strcmp((char*)data, "toggle3") == 0) {
+      ledState3 = !ledState3;
       notifyClients();
     }
   }
 }
+
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
              void *arg, uint8_t *data, size_t len) {
@@ -192,12 +223,25 @@ void initWebSocket() {
 
 String processor(const String& var){
   Serial.println(var);
-  if(var == "STATE"){
-    if (ledState1==1){
-      return "OFF";
+  if (var == "STATE1") {
+    if (ledState1 == 1) {
+      return "ON";  // Corrected
+    } else {
+      return "OFF";  // Corrected
     }
-    else{
-      return "ON";
+  }
+  if (var == "STATE2") {
+    if (ledState1 == 1) {
+      return "ON";  // Corrected
+    } else {
+      return "OFF";  // Corrected
+    }
+  }
+  if (var == "STATE3") {
+    if (ledState1 == 1) {
+      return "ON";  // Corrected
+    } else {
+      return "OFF";  // Corrected
     }
   }
   return String();
@@ -212,6 +256,9 @@ void setup(){
 
   pinMode(ledPin2, OUTPUT);
   digitalWrite(ledPin2, LOW);
+
+  pinMode(ledPin3, OUTPUT);
+  digitalWrite(ledPin3, LOW);
   
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -238,4 +285,6 @@ void setup(){
 void loop() {
   ws.cleanupClients();
   digitalWrite(ledPin1, ledState1);
+  digitalWrite(ledPin2, ledState2);
+  digitalWrite(ledPin3, ledState3);
 }
