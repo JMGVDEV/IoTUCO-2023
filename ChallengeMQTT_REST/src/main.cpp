@@ -2,23 +2,20 @@
 #include <ESP8266HTTPClient.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-
-//Local variables
-#include <../credentials.h>
-credentials credential;
  
-const char* ssid = credential.ssid;
-const char* password =  credential.password;
-const char* mqttServer = credential.mqttServer;
-const int mqttPort = credential.mqttPort;
-const char* mqttUser = credential.mqttUser;
-const char* mqttPassword = credential.mqttPassword;
-const char* TopicSub = credential.TopicSub;
-const char* TopicPubAlive = credential.TopicPub1;
-const char* TopicPubStatus = credential.TopicPub2;
-const char* TopicPubJson = credential.TopicPub3;
-const char* TopicPubOut = credential.TopicPub4;
+const char* ssid = "xxxx";
+const char* password =  "xxxx";
+const char* mqttServer = "xxxx";
+const int mqttPort = xxxx;
+const char* mqttUser = "xxxx";
+const char* mqttPassword = "xxxx";
+const char* TopicSub = "xxxx";
+const char* TopicPubAlive = "xxxx";
+const char* TopicPubStatus = "xxxx";
+const char* TopicPubJson = "xxxx";
+const char* TopicPubOut = "xxxx";
 
+String url_web = "http://www.worldtimeapi.org/api/timezone/";
 String message = "";
 String day_week = "";
 
@@ -151,7 +148,6 @@ void RestApi (String url_rest){
    TopicSub
 ************************************************/
 void callback(char* topic, unsigned char* payload, unsigned int length) {
-  String url_web = "http://www.worldtimeapi.org/api/timezone/";
 
   //Notify about message arrived 
   Serial.print("Message arrived in topic: ");
@@ -167,7 +163,9 @@ void callback(char* topic, unsigned char* payload, unsigned int length) {
   Serial.println("-----------------------");
 
   url_web+=message;
+  message="";
   RestApi(url_web);
+  url_web = "http://www.worldtimeapi.org/api/timezone/";
 }
 
 void setup() {
