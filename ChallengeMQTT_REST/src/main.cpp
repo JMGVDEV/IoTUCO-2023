@@ -3,17 +3,17 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
  
-const char* ssid = "xxxx";
-const char* password =  "xxxx";
-const char* mqttServer = "xxxx";
-const int mqttPort = xxxx;
-const char* mqttUser = "xx";
-const char* mqttPassword = "xxx";
-const char* TopicSub = "xxxx";
-const char* TopicPubAlive = "xxxx";
-const char* TopicPubStatus = "xxxx";
-const char* TopicPubJson = "xxxx";
-const char* TopicPubOut = "xxxx";
+const char* ssid = "MERCUSYS_98DC_EXT";
+const char* password =  "plaztilina2023";
+const char* mqttServer = "192.168.2.100";
+const int mqttPort = 1883;
+const char* mqttUser = "";
+const char* mqttPassword = "";
+const char* TopicSub = "Input";
+const char* TopicPubAlive = "Alive";
+const char* TopicPubStatus = "StatusRequest";
+const char* TopicPubJson = "JsonStatus";
+const char* TopicPubOut = "Output";
 
 String urlWeb = "http://www.worldtimeapi.org/api/timezone/";
 String message = "";
@@ -71,12 +71,12 @@ String getMonthName(int month) {
   }
 }
 
-void messageConverter(String message_REST) {
+void messageConverter(String messageREST) {
   // Define a DynamicJsonDocument
   DynamicJsonDocument jsonDoc(800); // Increase the size as needed
 
   // Parse JSON data into the JsonDocument
-  DeserializationError error = deserializeJson(jsonDoc, message_REST);
+  DeserializationError error = deserializeJson(jsonDoc, messageREST);
 
   if (error) {
     Serial.print("Error parsing JSON: ");
@@ -87,7 +87,6 @@ void messageConverter(String message_REST) {
 
   client.publish(TopicPubJson, "Data zone found it");
 
-  //Substract data from JSON 
   String datetime = jsonDoc["datetime"];
   int dayOfWeek = jsonDoc["day_of_week"];
   String dayWeek;
@@ -109,16 +108,14 @@ void messageConverter(String message_REST) {
   int hour = datetime.substring(11, 13).toInt();
   int minute = datetime.substring(14, 16).toInt();
 
-  //Send data from MQTT
-  char outputday[50];
+  char outputday[50]; // Adjust the size as needed
   snprintf(outputday, sizeof(outputday), "%s, %02d de %s de %04d -- %02d:%02d", dayWeek.c_str(), day, getMonthName(month).c_str(), year, hour, minute);
   client.publish(TopicPubOut, outputday);
 }
 
-
-void RestApi (String url_rest){
+void RestApi (String urlREST){
   HTTPClient http;
-   if (http.begin(clientWifi, url_rest)) //Start connection
+   if (http.begin(clientWifi, urlREST)) //Start connection
    {
       int httpCode = http.GET();  // GET Request
       if (httpCode > 0) {
@@ -164,6 +161,7 @@ void callback(char* topic, unsigned char* payload, unsigned int length) {
   Serial.println(message);
   Serial.println("-----------------------");
 
+  urlWeb+=message;
   message="";
   RestApi(urlWeb);
   urlWeb = "http://www.worldtimeapi.org/api/timezone/";
