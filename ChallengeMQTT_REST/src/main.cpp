@@ -7,19 +7,19 @@ const char* ssid = "xxxx";
 const char* password =  "xxxx";
 const char* mqttServer = "xxxx";
 const int mqttPort = xxxx;
-const char* mqttUser = "xxxx";
-const char* mqttPassword = "xxxx";
+const char* mqttUser = "xx";
+const char* mqttPassword = "xxx";
 const char* TopicSub = "xxxx";
 const char* TopicPubAlive = "xxxx";
 const char* TopicPubStatus = "xxxx";
 const char* TopicPubJson = "xxxx";
 const char* TopicPubOut = "xxxx";
 
-String url_web = "http://www.worldtimeapi.org/api/timezone/";
+String urlWeb = "http://www.worldtimeapi.org/api/timezone/";
 String message = "";
-String day_week = "";
+String dayWeek = "";
 
-WiFiClient client_wifi;
+WiFiClient clientWifi;
 
 
 WiFiClient espClient;
@@ -87,18 +87,19 @@ void messageConverter(String message_REST) {
 
   client.publish(TopicPubJson, "Data zone found it");
 
+  //Substract data from JSON 
   String datetime = jsonDoc["datetime"];
-  int day_of_week = jsonDoc["day_of_week"];
-  String day_week;
+  int dayOfWeek = jsonDoc["day_of_week"];
+  String dayWeek;
 
-  switch (day_of_week) {
-    case 1: day_week = "Lunes"; break;
-    case 2: day_week = "Martes"; break;
-    case 3: day_week = "Miércoles"; break;
-    case 4: day_week = "Jueves"; break;
-    case 5: day_week = "Viernes"; break;
-    case 6: day_week = "Sábado"; break;
-    case 7: day_week = "Domingo"; break;
+  switch (dayOfWeek) {
+    case 1: dayWeek = "Lunes"; break;
+    case 2: dayWeek = "Martes"; break;
+    case 3: dayWeek = "Miércoles"; break;
+    case 4: dayWeek = "Jueves"; break;
+    case 5: dayWeek = "Viernes"; break;
+    case 6: dayWeek = "Sábado"; break;
+    case 7: dayWeek = "Domingo"; break;
   }
 
   // Extract date and time components
@@ -108,15 +109,16 @@ void messageConverter(String message_REST) {
   int hour = datetime.substring(11, 13).toInt();
   int minute = datetime.substring(14, 16).toInt();
 
+  //Send data from MQTT
   char outputday[50];
-  snprintf(outputday, sizeof(outputday), "%s, %02d de %s de %04d -- %02d:%02d", day_week.c_str(), day, getMonthName(month).c_str(), year, hour, minute);
+  snprintf(outputday, sizeof(outputday), "%s, %02d de %s de %04d -- %02d:%02d", dayWeek.c_str(), day, getMonthName(month).c_str(), year, hour, minute);
   client.publish(TopicPubOut, outputday);
 }
 
 
 void RestApi (String url_rest){
   HTTPClient http;
-   if (http.begin(client_wifi, url_rest)) //Start connection
+   if (http.begin(clientWifi, url_rest)) //Start connection
    {
       int httpCode = http.GET();  // GET Request
       if (httpCode > 0) {
@@ -162,10 +164,9 @@ void callback(char* topic, unsigned char* payload, unsigned int length) {
   Serial.println(message);
   Serial.println("-----------------------");
 
-  url_web+=message;
   message="";
-  RestApi(url_web);
-  url_web = "http://www.worldtimeapi.org/api/timezone/";
+  RestApi(urlWeb);
+  urlWeb = "http://www.worldtimeapi.org/api/timezone/";
 }
 
 void setup() {
@@ -193,7 +194,6 @@ void setup() {
     }
   }
   client.subscribe(TopicSub);
-
 }
 
 
