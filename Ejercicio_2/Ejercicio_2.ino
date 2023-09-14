@@ -87,25 +87,82 @@ void loop() { //La función loop() se encarga de realizar una solicitud HTTP GET
   }
    clienteMQTT.loop();
   }
-String obtenerFechaYHora( String url) {
-  HTTPClient http;
 
-  if (http.begin(espClient,url)) {
+/********* Llamada obtenerFechayHora ***************************
+  Esta función se encarga de realizar una solicitud HTTP a una URL 
+  especificada, obtener una respuesta en formato JSON, analizar esa 
+  respuesta JSON y extraer la fecha y hora de ella
+*************************************************************/
+String getMonthName(int month) {
+  switch (month) {
+    case 1: return "Enero";
+    case 2: return "Febrero";
+    case 3: return "Marzo";
+    case 4: return "Abril";
+    case 5: return "Mayo";
+    case 6: return "Junio";
+    case 7: return "Julio";
+    case 8: return "Agosto";
+    case 9: return "Septiembre";
+    case 10: return "Octubre";
+    case 11: return "Noviembre";
+    case 12: return "Diciembre";
+    default: return "Mes Invalido";
+  }
+}
+  
+String obtenerFechaYHora(String url) {
+  HTTPClient http; //Se crea instancia utilizada para realizar solicitudes HTTP
+
+  if (http.begin(espClient, url)) { // Iniciar la conexión HTTP
     int httpCode = http.GET();
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      http.end();
+    
+    if (httpCode == HTTP_CODE_OK) { // Comprobar si la solicitud HTTP fue exitosa
+      String payload = http.getString(); //Si la solicitud es exitosa, se obtiene el contenido de la respuesta HTTP como una cadena de texto y se almacena en la variable payload
+      http.end(); //Se finaliza la conexion
 
-      DynamicJsonDocument jsonDoc(1024);
-      DeserializationError error = deserializeJson(jsonDoc, payload);
+      clienteMQTT.publish(TopicPubStatus, "OK" );
 
-      if (!error) {
+      DynamicJsonDocument jsonDoc(1024); //Se crea un objeto para almacenar el documento JSON 
+      DeserializationError error = deserializeJson(jsonDoc, payload); //Analiza la cadena y se almacena
+
+      if (!error) { //Verifica si hubo algun error
         String datetime = jsonDoc["datetime"];
+        clienteMQTT.publish(TopicPubJson, "JSON conseguido correctamente" );
         return datetime;
       } else {
+        clienteMQTT.publish(TopicPubJson, "JSON no conseguido correctamente" );
         Serial.println("Error al analizar JSON");
       }
+
+      String datetime = jsonDoc["datetime"];
+      int dayOfWeek = jsonDoc["day_of_week"];
+      String dayWeek;
+    
+      switch (dayOfWeek) {
+        case 1: dayWeek = "Lunes"; break;
+        case 2: dayWeek = "Martes"; break;
+        case 3: dayWeek = "Miércoles"; break;
+        case 4: dayWeek = "Jueves"; break;
+        case 5: dayWeek = "Viernes"; break;
+        case 6: dayWeek = "Sábado"; break;
+        case 7: dayWeek = "Domingo"; break;
+      }
+    
+      // Extract date and time components
+      int year = datetime.substring(0, 4).toInt();
+      int month = datetime.substring(5, 7).toInt();
+      int day = datetime.substring(8, 10).toInt();
+      int hour = datetime.substring(11, 13).toInt();
+      int minute = datetime.substring(14, 16).toInt();
+    
+      char outputday[50]; // Adjust the size as needed
+      snprintf(outputday, sizeof(outputday), "%s, %02d de %s de %04d -- %02d:%02d", dayWeek.c_str(), day, getMonthName(month).c_str(), year, hour, minute);
+      clienteMQTT.publish(TopicPubOut, outputday);
+      
+
     } else {
+      clienteMQTT.publish(TopicPubStatus, ("Error...%s", http.errorToString(httpCode).c_str() ) );
       Serial.println("Error en la solicitud HTTP");
       http.end();
     }
