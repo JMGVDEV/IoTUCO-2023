@@ -3,11 +3,11 @@
 #include <PubSubClient.h> // Se utiliza para establecer una conexión MQTT y publicar/suscribirse a temas MQTT.
 #include <ArduinoJson.h> // Esta biblioteca se utiliza para analizar y generar datos en formato JSON.
 //WIfi SSID & PASS
-const char* ssid = "QuintanaDaza"; //
-const char* password = "americadecali74"; //Contraseña
+const char* ssid = "xxxxxxxxxx"; //
+const char* password = "xxxxxxxxx"; //Contraseña
 
 //Configuración MQTT
-const char* mqttServer = "190.240.28.22"; // IP DE LA MÁQUINA
+const char* mqttServer = "xxxxxxxxxxxx"; // IP DE LA MÁQUINA
 const int mqttPort = 1883; //Puerto usado por el servicio mosquitto
 const char* mqttUser = ""; // Usuario MQTT (si es necesario)
 const char* mqttPassword = ""; // Contraseña MQTT (si es necesario)
@@ -160,7 +160,6 @@ String obtenerFechaYHora(String url) {
       snprintf(outputday, sizeof(outputday), "%s, %02d de %s de %04d -- %02d:%02d", dayWeek.c_str(), day, getMonthName(month).c_str(), year, hour, minute);
       clienteMQTT.publish(TopicPubOut, outputday);
       
-
     } else {
       clienteMQTT.publish(TopicPubStatus, ("Error...%s", http.errorToString(httpCode).c_str() ) );
       Serial.println("Error en la solicitud HTTP");
